@@ -18,7 +18,7 @@ import {
 
 import Dialog, { DialogProps } from '@mui/material/Dialog';
 import { IActionsModal } from './interface';
-import { ApiService } from '../../services/api.service'
+import { ApiService } from '../../../services/api.service'
 export const NewBussines = ({open,setOpen}:IActionsModal):JSX.Element => {
     const api = new ApiService()
     const [name, setName] = React.useState('');

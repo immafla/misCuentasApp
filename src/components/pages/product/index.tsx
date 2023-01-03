@@ -1,234 +1,350 @@
-import React from 'react'
+import React, { FC, useState, useMemo, useCallback } from 'react'
+import { validateRequired, validateEmail, validateAge } from '../../../utils'
 import {
     Button,
     TextField,
     DialogActions,
     DialogContent,
     DialogTitle, 
-    Paper,
-    Table,
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableHead,
-    TablePagination,
-    TableRow,
-    FormControl,
-    InputLabel,
+    Box,
+    Tooltip,
+    IconButton,
     MenuItem,
-    Select,
-    Grid,
-    Container
+		Stack,
 } from '@mui/material'
-
-import { SelectChangeEvent } from '@mui/material/Select';
+import MaterialReactTable, {
+    MaterialReactTableProps,
+    MRT_Cell,
+    MRT_ColumnDef,
+    MRT_Row,
+  } from 'material-react-table';
+import { MRT_Localization_ES } from 'material-react-table/locales/es';
+import { data, states } from './makeData';
+import { Delete, Edit, AddCircle } from '@mui/icons-material';
 import Dialog, { DialogProps } from '@mui/material/Dialog';
-import { IActionsModal } from './interface';
-import MaterialTable from 'material-table';
+import { IActionsModal, Product } from './interface';
 
 export const NewProduct = ({open,setOpen}: IActionsModal) => {
+	const [tableData, setTableData] = useState<Product[]>(() => data);
+  const [fullWidth, setFullWidth] = useState(true);
+  const [maxWidth, setMaxWidth] = useState<DialogProps['maxWidth']>('lg');
+	const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<{
+      [cellId: string]: string;
+    }>({});
 
-    const [age, setAge] = React.useState('');
-    const [fullWidth, setFullWidth] = React.useState(true);
-    const [maxWidth, setMaxWidth] = React.useState<DialogProps['maxWidth']>('sm');
+  const handleSaveRowEdits: MaterialReactTableProps<Product>['onEditingRowSave'] =
+      async ({ exitEditingMode, row, values }) => {
+      if (!Object.keys(validationErrors).length) {
+          tableData[row.index] = values;
+          setTableData([...tableData]);
+          exitEditingMode();
+      }
+  };
 
-    const handleChange = (event: SelectChangeEvent) => {
-        setAge(event.target.value as string);
-    };
-    
-    // TABLE STATES
-    
-    const [page, setPage] = React.useState(0);
-    const [rowsPerPage, setRowsPerPage] = React.useState(5);
-
-    const handleChangePage = (event: unknown, newPage: number) => {
-        setPage(newPage);
-    };
-
-    const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setRowsPerPage(+event.target.value);
-        setPage(0);
+  const handleCancelRowEdits = () => {
+      setValidationErrors({});
     };
 
-    return (
-        <Dialog 
-            open={open} 
-            onClose={() => setOpen()}
-            fullWidth={fullWidth}
-            maxWidth={maxWidth}
-        >
-            <DialogTitle>Ingresa el producto</DialogTitle>
-            <DialogContent>
-                <Container fixed >
-                
-                    <Grid container sx={{ m: 2 }} rowSpacing={2} columnSpacing={{ xs: 15, sm: 2, md: 3 }} >
-                        
-                        {/* NOMBRE DEL PRODUCTO */}
-                        <Grid item xs={12}>
-                            <FormControl fullWidth>
-                                <TextField
-                                    autoFocus
-                                    margin="dense"
-                                    id="name"
-                                    label="Nombre del producto"
-                                    type="text"
-                                    fullWidth
-                                    variant="outlined"
-                                />
-                            </FormControl>
-                        </Grid>
+  const handleDeleteRow = useCallback(
+    (row: MRT_Row<Product>) => {
+      if (
+        !confirm(`Are you sure you want to delete ${row.getValue('firstName')}`)
+      ) {
+        return;
+      }
+      //send api delete request here, then refetch or update local table data for re-render
+      tableData.splice(row.index, 1);
+      setTableData([...tableData]);
+    },
+    [tableData],
+  );
 
-                        {/* CATEGORIA */}
-                        <Grid item xs={6}>
-                            <FormControl fullWidth sx={{ mt: 1 }}>
-                                <InputLabel id="demo-simple-select-label">Categoria</InputLabel>
-                                <Select
-                                    labelId="demo-simple-select-label"
-                                    id="demo-simple-select"
-                                    value={age}
-                                    label="Categoria"
-                                    onChange={handleChange}
-                                >
-                                    <MenuItem value={10}>Licorera</MenuItem>
-                                    <MenuItem value={20}>Papeleria</MenuItem>
-                                </Select>
-                            </FormControl>
-                        </Grid>
-
-                        
-
-                        {/* VALOR UNITARIO */}
-                        <Grid item xs={6}>
-                            <FormControl fullWidth>
-                                <TextField
-                                    autoFocus
-                                    margin="dense"
-                                    id="code"
-                                    label="Valor unitario"
-                                    type="text"
-                                    fullWidth
-                                    variant="outlined"
-                                />
-                            </FormControl>
-                        </Grid>
-                    </Grid>
-            </Container>
-                
-                
-
-                
-
-                {/* INICIO TABLA */}
-                {/* <Paper sx={{ width: '100%', overflow: 'hidden' }}>
-                    <TableContainer sx={{ maxHeight: 440 }}>
-                        <Table stickyHeader aria-label="sticky table">
-                            <TableHead>
-                                <TableRow>
-                                    {columns.map((column) => (
-                                        <TableCell
-                                            key={column.id}
-                                            align={column.align}
-                                            style={{ minWidth: column.minWidth }}
-                                        >
-                                            {column.label}
-                                        </TableCell>
-                                    ))}
-                                </TableRow>
-                            </TableHead>
-                            <TableBody>
-                                {rows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => {
-                                    return (
-                                        <TableRow hover role="checkbox" tabIndex={-1} key={row.code}>
-                                            {columns.map((column) => {
-                                                const value = row[column.id];
-                                                return (
-                                                    <TableCell key={column.id} align={column.align}>
-                                                        {column.format && typeof value === 'number'
-                                                            ? column.format(value)
-                                                            : value}
-                                                    </TableCell>
-                                                );
-                                            })}
-                                        </TableRow>
-                                    );
-                                })}
-                            </TableBody>
-                        </Table>
-                    </TableContainer>
-                    <TablePagination
-                        rowsPerPageOptions={[10, 25, 100]}
-                        component="div"
-                        count={rows.length}
-                        rowsPerPage={rowsPerPage}
-                        page={page}
-                        onPageChange={handleChangePage}
-                        onRowsPerPageChange={handleChangeRowsPerPage}
-                    />
-                </Paper> */}
-
-<MaterialTable
-      title="Simple Action Preview"
-      columns={[
-        { title: 'Name', field: 'name' },
-        { title: 'Surname', field: 'surname' },
-        { title: 'Birth Year', field: 'birthYear', type: 'numeric' },
-        {
-          title: 'Birth Place',
-          field: 'birthCity',
-          lookup: { 34: 'İstanbul', 63: 'Şanlıurfa' },
+	const getCommonEditTextFieldProps = useCallback(
+    (
+      cell: MRT_Cell<Product>,
+    ): MRT_ColumnDef<Product>['muiTableBodyCellEditTextFieldProps'] => {
+      return {
+        error: !!validationErrors[cell.id],
+        helperText: validationErrors[cell.id],
+        onBlur: (event) => {
+          const isValid =
+            cell.column.id === 'email'
+              ? validateEmail(event.target.value)
+              : cell.column.id === 'age'
+              ? validateAge(+event.target.value)
+              : validateRequired(event.target.value);
+          if (!isValid) {
+            //set validation error for cell if invalid
+            setValidationErrors({
+              ...validationErrors,
+              [cell.id]: `${cell.column.columnDef.header} is required`,
+            });
+          } else {
+            //remove validation error for cell if valid
+            delete validationErrors[cell.id];
+            setValidationErrors({
+              ...validationErrors,
+            });
+          }
         },
-      ]}
-      data={[
-        { name: 'Mehmet', surname: 'Baran', birthYear: 1987, birthCity: 63 },
-        { name: 'Zerya Betül', surname: 'Baran', birthYear: 2017, birthCity: 34 },
-      ]}        
-      actions={[
-        {
-          icon: 'save',
-          tooltip: 'Save User',
-          onClick: (event, rowData) => alert("You saved " + rowData.name)
-        }
-      ]}
-    />
-                {/* FIN TABLA */}
-            </DialogContent>
-            <DialogActions>
-                <Button onClick={() => setOpen()}>Cancelar</Button>
-                <Button variant="contained" onClick={() => setOpen()}>Crear</Button>
-            </DialogActions>
-        </Dialog>
-    )
+      };
+    },
+    [validationErrors],
+  );
+
+	const handleCreateNewRow = (values: Product) => {
+		console.log(values)
+    tableData.push(values);
+    setTableData([...tableData]);
+  };
+
+	const columns = useMemo<MRT_ColumnDef<Product>[]>(
+    () => [
+      {
+        accessorKey: 'name',
+        header: 'Nombre del producto',
+        size: 140,
+        muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
+					variant:"outlined",
+          ...getCommonEditTextFieldProps(cell),
+        }),
+      },
+			{
+        accessorKey: 'brand',
+        header: 'Marca',
+        size: 120,
+        muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
+					variant:"outlined",
+          ...getCommonEditTextFieldProps(cell),
+        }),
+      },
+			{
+        accessorKey: 'amount',
+        header: 'Disponibles',
+        size: 2,
+				enableEditing: false,
+        muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
+					variant:"outlined",
+          ...getCommonEditTextFieldProps(cell),
+        }),
+				Cell: ({ cell }) => (
+					<Box
+						sx={(theme) => ({
+							backgroundColor:
+								cell.getValue<number>() < 10
+									? theme.palette.error.dark
+									: cell.getValue<number>() >= 10 &&
+										cell.getValue<number>() < 20
+									? theme.palette.warning.dark
+									: theme.palette.success.dark,
+							borderRadius: '0.25rem',
+							color: '#fff',
+							maxWidth: '9ch',
+							p: '0.25rem',
+						})}
+					>
+						{cell.getValue<number>()}
+						{/* {cell.getValue<number>()?.toLocaleString?.('en-US', {
+							style: 'currency',
+							currency: 'USD',
+							minimumFractionDigits: 0,
+							maximumFractionDigits: 0,
+						})} */}
+					</Box>
+				),
+      },
+			{
+        accessorKey: 'category',
+        header: 'Categoria',
+				size: 40,
+        muiTableBodyCellEditTextFieldProps: {
+					variant:"outlined",
+          select: true, //change to select for a dropdown
+          children: states.map((state) => (
+            <MenuItem key={state} value={state}>
+              {state}
+            </MenuItem>
+          )),
+        },
+      },
+			{
+        accessorKey: 'purchase_price',
+        header: 'Precio de compra',
+        size: 20,
+        muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
+					variant:"outlined",
+          ...getCommonEditTextFieldProps(cell),
+          type: 'number',
+        }),
+				Cell: ({ cell }) => (
+					<Box>
+						{cell.getValue<number>()?.toLocaleString?.('es-CO', {
+							style: 'currency',
+							currency: 'COP',
+							minimumFractionDigits: 0,
+							maximumFractionDigits: 0,
+						})}
+					</Box>
+				),
+      },
+      {
+        accessorKey: 'sale_price',
+        header: 'Precio de venta',
+        size: 20,
+        muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
+					variant:"outlined",
+          ...getCommonEditTextFieldProps(cell),
+          type: 'number',
+        }),
+				Cell: ({ cell }) => (
+					<Box>
+						{cell.getValue<number>()?.toLocaleString?.('es-CO', {
+							style: 'currency',
+							currency: 'COP',
+							minimumFractionDigits: 0,
+							maximumFractionDigits: 0,
+						})}
+					</Box>
+				),
+      }
+    ],
+    [getCommonEditTextFieldProps],
+  );
+
+  return (
+    <Dialog 
+      open={open} 
+      onClose={() => setOpen()}
+      fullWidth={fullWidth}
+      maxWidth={maxWidth}
+    >
+      <DialogTitle>Inventario</DialogTitle>
+      <DialogContent>
+        <MaterialReactTable
+					positionActionsColumn="last"
+					muiTableBodyRowProps={{ hover: false }}
+					enableDensityToggle={false}
+					enableFullScreenToggle={false}
+					enableHiding={false}
+					enableRowOrdering={false}
+					enableColumnFilters={false}
+					enableSorting={false}
+					initialState={{ density: 'compact' }}
+					editingMode="modal"
+					localization={MRT_Localization_ES}
+					columns={columns}
+          data={tableData}
+          enableEditing
+          onEditingRowSave={handleSaveRowEdits}
+          onEditingRowCancel={handleCancelRowEdits}
+          displayColumnDefOptions={{
+						'mrt-row-actions': {
+								header: 'Editar producto',
+								muiTableHeadCellProps: {
+									align: 'left'
+								},
+								size: 20,
+						},
+          }}
+					muiSearchTextFieldProps={{
+						placeholder: 'Buscar productos',
+						sx: { minWidth: '400px' },
+						variant: 'outlined',
+					}}
+          renderRowActions={({ row, table }) => (
+						<Box sx={{ display: 'flex', gap: '1rem' }}>
+              <Tooltip arrow placement="left" title="Editr">
+                  <IconButton onClick={() => table.setEditingRow(row)}>
+                      <Edit />
+                  </IconButton>
+              </Tooltip>
+              <Tooltip arrow placement="right" title="Delete">
+                  <IconButton color="error" onClick={() => handleDeleteRow(row)}>
+                      <Delete />
+                  </IconButton>
+              </Tooltip>
+            </Box>
+					)}
+          renderTopToolbarCustomActions={() => (
+						<Button
+							color="primary"
+							onClick={() => setCreateModalOpen(true)}
+							variant="contained"
+						>
+							<Box sx={{ display: 'flex', gap: '1rem' }}>
+								<AddCircle color="secondary"/>  Crear producto
+							</Box>
+						</Button>
+          )}
+        />
+				<CreateNewAccountModal
+					columns={columns}
+					open={createModalOpen}
+					onClose={() => setCreateModalOpen(false)}
+					onSubmit={handleCreateNewRow}
+				/>
+      </DialogContent>
+      <DialogActions>
+          <Button variant="contained" onClick={() => setOpen()}>Cerrar</Button>
+      </DialogActions>
+    </Dialog>
+  )
 }
 
-const rows = [
-    createData('Cuaderno','Papeleria', 5000)
-  ];
+export const CreateNewAccountModal: FC<{
+	columns: MRT_ColumnDef<Product>[];
+	onClose: () => void;
+	onSubmit: (values: Product) => void;
+	open: boolean;
+}> = ({ open, columns, onClose, onSubmit }) => {
+	const [values, setValues] = useState<any>(() =>
+		columns.reduce((acc, column) => {
+			acc[column.accessorKey ?? ''] = '';
+			return acc;
+		}, {} as any),
+	);
 
+	const handleSubmit = () => {
+		onSubmit(values);
+		onClose();
+	};
 
-  interface Column {
-    id: 'name' | 'category' | 'price';
-    label: string;
-    minWidth?: number;
-    align?: 'right';
-    format?: (value: number) => string;
-  }
-  
-  const columns: readonly Column[] = [
-    { id: 'name', label: 'Nombre del producto', minWidth: 170 },
-    { id: 'category', label: 'Categoria', minWidth: 80 },
-    { id: 'price', label: 'Valor', minWidth: 80 },
-  ];
-  
-  interface Data {
-    name: string;
-    price: number,
-    category: string
-  }
-  
-  function createData(
-    name: string,
-    category: string,
-    price: number,
-  ): Data {
-    return { name, category, price };
-  }
+	return (
+		<Dialog open={open}>
+			<DialogTitle textAlign="center">Crear nuevo producto</DialogTitle>
+			<DialogContent>
+				<form onSubmit={(e) => e.preventDefault()} >
+					<Stack
+						sx={{
+							width: '100%',
+							minWidth: { xs: '300px', sm: '360px', md: '400px'},
+							gap: '1.5rem',
+							pt:1
+						}}
+					>
+						{columns.map((column) => (
+								column.accessorKey != 'amount' ? (
+									<TextField
+										key={column.accessorKey}
+										label={column.header}
+										name={column.accessorKey}
+										variant="outlined"
+										onChange={(e) =>
+											setValues({ ...values, [e.target.name]: e.target.value })
+										}
+									/>
+								) : null
+						))}
+					</Stack>
+				</form>
+			</DialogContent>
+			<DialogActions sx={{ p: '1.25rem' }}>
+				<Button onClick={onClose}>Cancel</Button>
+				<Button color="primary" onClick={handleSubmit} variant="contained">
+					Crear
+				</Button>
+			</DialogActions>
+		</Dialog>
+	);
+};
