@@ -16,11 +16,11 @@ import ListItem from '@mui/material/ListItem';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
-import InboxIcon from '@mui/icons-material/MoveToInbox';
+import AssignmentIcon from '@mui/icons-material/Assignment';
 import NoteAltSharpIcon from '@mui/icons-material/NoteAltSharp';
 import PointOfSaleIcon from '@mui/icons-material/PointOfSale';
 import SimCardDownloadSharpIcon from '@mui/icons-material/SimCardDownloadSharp';
-import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+import CategoryIcon from '@mui/icons-material/Category';
 import PlaylistAddIcon from '@mui/icons-material/PlaylistAdd';
 
 const drawerWidth = 240;
@@ -97,7 +97,9 @@ const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' 
 export const MiniDrawer = ({
   showProduct,
   showAddInventary,
-  showSale
+  showSale,
+  showAddBrand,
+  showAddCategory
 }: any) => {
   const theme = useTheme();
   const [open, setOpen] = React.useState(false);
@@ -156,7 +158,7 @@ export const MiniDrawer = ({
               label:'Ingresar inventario', 
               icon: <SimCardDownloadSharpIcon />,
               action: () => showAddInventary()
-            }
+            },
           ].map((element, index) => (
 
             <ListItem key={element.label} disablePadding sx={{ display: 'block' }} onClick={element.action}>
@@ -182,9 +184,20 @@ export const MiniDrawer = ({
           ))}
         </List>
         <Divider />
-        {/* <List>
-          {['All mail', 'Trash', 'Spam'].map((text, index) => (
-            <ListItem key={text} disablePadding sx={{ display: 'block' }}>
+        <List>
+        {[
+          {
+            label:'Nueva marca', 
+            icon: <AssignmentIcon />,
+            action: () => showAddBrand()
+          },
+          {
+            label:'Nueva Categoria', 
+            icon: <CategoryIcon />,
+            action: () => showAddCategory()
+          },
+          ].map((element, index) => (
+            <ListItem key={element.label} disablePadding sx={{ display: 'block' }} onClick={element.action}>
               <ListItemButton
                 sx={{
                   minHeight: 48,
@@ -199,16 +212,15 @@ export const MiniDrawer = ({
                     justifyContent: 'center',
                   }}
                 >
-                  {index % 2 === 0 ? <InboxIcon /> : <MailIcon />}
+                  {element.icon}
                 </ListItemIcon>
-                <ListItemText primary={text} sx={{ opacity: open ? 1 : 0 }} />
+                <ListItemText primary={element.label} sx={{ opacity: open ? 1 : 0 }} />
               </ListItemButton>
             </ListItem>
           ))}
-        </List> */}
+        </List>
       </Drawer>
       <Box component="main" sx={{ flexGrow: 1, p: -3 }}>
-
         <img src="bg_home.jpg" alt="" />
       </Box>
     </Box>

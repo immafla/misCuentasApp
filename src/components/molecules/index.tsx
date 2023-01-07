@@ -1,1 +1,3 @@
-export { MiniDrawer } from './drawer'
+export * from './modals'
+export { MiniDrawer } from './drawer';
+export { Modal } from './modal';

@@ -5,11 +5,11 @@ import {
 } from '@mui/material'
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { 
-  NewBussines,
+  NewBrand,
   NewInventary,
   NewSale,
   NewProduct
- } from './components/pages'
+} from './components/pages'
 
 import {
   MiniDrawer
@@ -20,22 +20,24 @@ import './App.css'
 import { blue } from '@mui/material/colors';
 
 function App() {
-  const [openNewBussinesModal, setOpenNewBussinesModal] = React.useState(false);
+  const [openNewBrandModal, setOpenNewBrandModal] = React.useState(false);
   const [openNewInventaryModal, setOpenNewInventaryModal] = React.useState(false);
   const [openNewSaleModal, setOpenNewSaleModal] = React.useState(false);
   const [openNewProductModal, setOpenNewProductModal] = React.useState(false);
 
   return (
     <ThemeProvider theme={theme}>
+      <NewBrand open={openNewBrandModal} setOpen={()=> setOpenNewBrandModal(prev => !prev)} />
+      <NewInventary open={openNewInventaryModal} setOpen={()=> setOpenNewInventaryModal(prev => !prev)} />
+      <NewSale open={openNewSaleModal} setOpen={()=> setOpenNewSaleModal(prev => !prev)} />
+      <NewProduct open={openNewProductModal} setOpen={()=> setOpenNewProductModal(prev => !prev)} />
+      
       <MiniDrawer 
         showProduct={()=>setOpenNewProductModal(prev => !prev)}
         showSale={()=>setOpenNewSaleModal(prev => !prev)}
         showAddInventary={()=>setOpenNewInventaryModal(prev => !prev)}
+        showAddBrand={()=>setOpenNewBrandModal(prev => !prev)}
       />
-        <NewInventary open={openNewInventaryModal} setOpen={()=> setOpenNewInventaryModal(prev => !prev)} />
-        {/* <NewBussines open={openNewBussinesModal} setOpen={()=> setOpenNewBussinesModal(prev => !prev)} /> */}
-        <NewSale open={openNewSaleModal} setOpen={()=> setOpenNewSaleModal(prev => !prev)} />
-        <NewProduct open={openNewProductModal} setOpen={()=> setOpenNewProductModal(prev => !prev)} />
         
       {/* <div className="App">
         

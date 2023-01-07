@@ -1,4 +1,4 @@
-import React, { FC, useState, useMemo, useCallback } from 'react'
+import React, { FC, useState, useMemo, useCallback, useEffect } from 'react'
 import { validateRequired, validateEmail, validateAge } from '../../../utils'
 import {
     Button,
@@ -11,6 +11,9 @@ import {
     IconButton,
     MenuItem,
 		Stack,
+    FormControl,
+    InputLabel,
+    Select
 } from '@mui/material'
 import MaterialReactTable, {
     MaterialReactTableProps,
@@ -19,13 +22,15 @@ import MaterialReactTable, {
     MRT_Row,
   } from 'material-react-table';
 import { MRT_Localization_ES } from 'material-react-table/locales/es';
-import { data, states } from './makeData';
+import { data, categories, brands } from './makeData';
 import { Delete, Edit, AddCircle } from '@mui/icons-material';
 import Dialog, { DialogProps } from '@mui/material/Dialog';
 import { IActionsModal, Product } from './interface';
 
+import { NewProductModal } from '../../molecules'
+
 export const NewProduct = ({open,setOpen}: IActionsModal) => {
-	const [tableData, setTableData] = useState<Product[]>(() => data);
+	const [tableData, setTableData] = useState<any[]>(() => data);
   const [fullWidth, setFullWidth] = useState(true);
   const [maxWidth, setMaxWidth] = useState<DialogProps['maxWidth']>('lg');
 	const [createModalOpen, setCreateModalOpen] = useState(false);
@@ -49,7 +54,7 @@ export const NewProduct = ({open,setOpen}: IActionsModal) => {
   const handleDeleteRow = useCallback(
     (row: MRT_Row<Product>) => {
       if (
-        !confirm(`Are you sure you want to delete ${row.getValue('firstName')}`)
+        !confirm(`Are you sure you want to delete ${row.getValue('name')}`)
       ) {
         return;
       }
@@ -62,8 +67,8 @@ export const NewProduct = ({open,setOpen}: IActionsModal) => {
 
 	const getCommonEditTextFieldProps = useCallback(
     (
-      cell: MRT_Cell<Product>,
-    ): MRT_ColumnDef<Product>['muiTableBodyCellEditTextFieldProps'] => {
+      cell: MRT_Cell<any>,
+    ): MRT_ColumnDef<any>['muiTableBodyCellEditTextFieldProps'] => {
       return {
         error: !!validationErrors[cell.id],
         helperText: validationErrors[cell.id],
@@ -93,13 +98,13 @@ export const NewProduct = ({open,setOpen}: IActionsModal) => {
     [validationErrors],
   );
 
-	const handleCreateNewRow = (values: Product) => {
+	const handleCreateNewRow = (values: any) => {
 		console.log(values)
     tableData.push(values);
     setTableData([...tableData]);
   };
 
-	const columns = useMemo<MRT_ColumnDef<Product>[]>(
+	const columns = useMemo<MRT_ColumnDef<any>[]>(
     () => [
       {
         accessorKey: 'name',
@@ -113,11 +118,16 @@ export const NewProduct = ({open,setOpen}: IActionsModal) => {
 			{
         accessorKey: 'brand',
         header: 'Marca',
-        size: 120,
-        muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
+        size: 40,
+        muiTableBodyCellEditTextFieldProps:{
 					variant:"outlined",
-          ...getCommonEditTextFieldProps(cell),
-        }),
+          select: true, //change to select for a dropdown
+          children: brands.map((brand) => (
+            <MenuItem key={brand} value={brand}>
+              {brand}
+            </MenuItem>
+          )),
+        },
       },
 			{
         accessorKey: 'amount',
@@ -161,9 +171,9 @@ export const NewProduct = ({open,setOpen}: IActionsModal) => {
         muiTableBodyCellEditTextFieldProps: {
 					variant:"outlined",
           select: true, //change to select for a dropdown
-          children: states.map((state) => (
-            <MenuItem key={state} value={state}>
-              {state}
+          children: categories.map((category) => (
+            <MenuItem key={category} value={category}>
+              {category}
             </MenuItem>
           )),
         },
@@ -278,7 +288,7 @@ export const NewProduct = ({open,setOpen}: IActionsModal) => {
 						</Button>
           )}
         />
-				<CreateNewAccountModal
+				<NewProductModal
 					columns={columns}
 					open={createModalOpen}
 					onClose={() => setCreateModalOpen(false)}
@@ -291,60 +301,3 @@ export const NewProduct = ({open,setOpen}: IActionsModal) => {
     </Dialog>
   )
 }
-
-export const CreateNewAccountModal: FC<{
-	columns: MRT_ColumnDef<Product>[];
-	onClose: () => void;
-	onSubmit: (values: Product) => void;
-	open: boolean;
-}> = ({ open, columns, onClose, onSubmit }) => {
-	const [values, setValues] = useState<any>(() =>
-		columns.reduce((acc, column) => {
-			acc[column.accessorKey ?? ''] = '';
-			return acc;
-		}, {} as any),
-	);
-
-	const handleSubmit = () => {
-		onSubmit(values);
-		onClose();
-	};
-
-	return (
-		<Dialog open={open}>
-			<DialogTitle textAlign="center">Crear nuevo producto</DialogTitle>
-			<DialogContent>
-				<form onSubmit={(e) => e.preventDefault()} >
-					<Stack
-						sx={{
-							width: '100%',
-							minWidth: { xs: '300px', sm: '360px', md: '400px'},
-							gap: '1.5rem',
-							pt:1
-						}}
-					>
-						{columns.map((column) => (
-								column.accessorKey != 'amount' ? (
-									<TextField
-										key={column.accessorKey}
-										label={column.header}
-										name={column.accessorKey}
-										variant="outlined"
-										onChange={(e) =>
-											setValues({ ...values, [e.target.name]: e.target.value })
-										}
-									/>
-								) : null
-						))}
-					</Stack>
-				</form>
-			</DialogContent>
-			<DialogActions sx={{ p: '1.25rem' }}>
-				<Button onClick={onClose}>Cancel</Button>
-				<Button color="primary" onClick={handleSubmit} variant="contained">
-					Crear
-				</Button>
-			</DialogActions>
-		</Dialog>
-	);
-};
