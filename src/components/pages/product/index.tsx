@@ -105,7 +105,12 @@ export const NewProduct = ({open,setOpen}: IActionsModal) => {
     try{
       const productsResponse: Product[] = await (await apiService.setProduct(values)).json()
       if(productsResponse){
-        setTableData([...tableData, values]);
+        const parseValues = {
+          ...values,
+          brand: parseBrand(values.brand).name,
+          category: parseCategory(values.category).name
+        }
+        setTableData([...tableData, parseValues]);
       }
     }catch(e){
       console.log('Error al guardar el producto =>', {e})
@@ -186,29 +191,29 @@ export const NewProduct = ({open,setOpen}: IActionsModal) => {
           )),
         },
       },
-			{
-        accessorKey: 'purchase_price',
-        header: 'Precio de compra',
-        size: 20,
-        muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
-					variant:"outlined",
-          ...getCommonEditTextFieldProps(cell),
-          type: 'number',
-        }),
-				Cell: ({ cell }) => (
-					<Box>
-						{cell.getValue<number>()?.toLocaleString?.('es-CO', {
-							style: 'currency',
-							currency: 'COP',
-							minimumFractionDigits: 0,
-							maximumFractionDigits: 0,
-						})}
-					</Box>
-				),
-      },
+			// {
+      //   accessorKey: 'purchase_price',
+      //   header: 'Precio de compra',
+      //   size: 20,
+      //   muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
+			// 		variant:"outlined",
+      //     ...getCommonEditTextFieldProps(cell),
+      //     type: 'number',
+      //   }),
+			// 	Cell: ({ cell }) => (
+			// 		<Box>
+			// 			{cell.getValue<number>()?.toLocaleString?.('es-CO', {
+			// 				style: 'currency',
+			// 				currency: 'COP',
+			// 				minimumFractionDigits: 0,
+			// 				maximumFractionDigits: 0,
+			// 			})}
+			// 		</Box>
+			// 	),
+      // },
       {
         accessorKey: 'sale_price',
-        header: 'Precio de venta',
+        header: 'Precio',
         size: 20,
         muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
 					variant:"outlined",

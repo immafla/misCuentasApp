@@ -100,7 +100,10 @@ export const NewProductModal: FC<{
             <Box className={styles.container}> 
                 {columns.map((column, index) => {
                     return(
-                        column.accessorKey != 'amount' && column.accessorKey != 'brand' && column.accessorKey != 'category' ? column.accessorKey == 'purchase_price' || column.accessorKey == 'sale_price' ? (
+                        column.accessorKey != 'amount' &&
+                        column.accessorKey != 'brand' &&
+                        column.accessorKey != 'category' ? 
+                        column.accessorKey == 'sale_price' ? (
                             <FormControl 
                                 key={index} 
                                 fullWidth 
