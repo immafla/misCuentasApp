@@ -46,16 +46,25 @@ export const NewBrand = ({open,setOpen}:IActionsModal):JSX.Element => {
         }
     };
 
-    const handleDeleteRow = useCallback(
-        (row: MRT_Row<any>) => {
-            if (
-            !confirm(`Are you sure you want to delete ${row.getValue('name')}`)
-            ) {
-                return;
-            }
+    const validateBrandIsUsed = async (idBrand) => {
+
+    }
+
+
+    const handleDeleteRow = useCallback(async (row: MRT_Row<any>) => {
+            // if (!confirm(`Are you sure you want to delete ${row.getValue('name')}`)) {
+            //     console.log({row})
+            //     return;
+            // }
+            // if(validateBrandIsUsed(row.original._id)){
+
+            // }
+            const response = await api.deleteBrand({_id:row.original._id})
+            console.log({response})
+            console.log(row.original)
             //send api delete request here, then refetch or update local table data for re-render
-            tableData.splice(row.index, 1);
-            setTableData([...tableData]);
+            // tableData.splice(row.index, 1);
+            // setTableData([...tableData]);
         },
         [tableData],
     );

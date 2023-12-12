@@ -4,6 +4,7 @@ export interface IActionsModal {
 }
 
 export type Product = {
+    bar_code: string;
     name: string;
     brand: string;
     category: string;

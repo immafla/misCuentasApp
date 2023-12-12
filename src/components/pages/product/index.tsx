@@ -1,5 +1,6 @@
 import React, { FC, useState, useMemo, useCallback, useEffect } from 'react'
 import { validateRequired, validateEmail, validateAge } from '../../../utils'
+import { ApiService } from '../../../services/api.service'
 import {
     Button,
     TextField,
@@ -22,7 +23,6 @@ import MaterialReactTable, {
     MRT_Row,
   } from 'material-react-table';
 import { MRT_Localization_ES } from 'material-react-table/locales/es';
-import { data, categories, brands } from './makeData';
 import { Delete, Edit, AddCircle } from '@mui/icons-material';
 import Dialog, { DialogProps } from '@mui/material/Dialog';
 import { IActionsModal, Product } from './interface';
@@ -30,7 +30,10 @@ import { IActionsModal, Product } from './interface';
 import { NewProductModal } from '../../molecules'
 
 export const NewProduct = ({open,setOpen}: IActionsModal) => {
-	const [tableData, setTableData] = useState<any[]>(() => data);
+  const apiService = new ApiService
+	const [tableData, setTableData] = useState<Product[]>([]);
+	const [brands, setAllBrands] = useState<any[]>([]);
+	const [categories, setAllCategories] = useState<any[]>([]);
   const [fullWidth, setFullWidth] = useState(true);
   const [maxWidth, setMaxWidth] = useState<DialogProps['maxWidth']>('lg');
 	const [createModalOpen, setCreateModalOpen] = useState(false);
@@ -67,8 +70,8 @@ export const NewProduct = ({open,setOpen}: IActionsModal) => {
 
 	const getCommonEditTextFieldProps = useCallback(
     (
-      cell: MRT_Cell<any>,
-    ): MRT_ColumnDef<any>['muiTableBodyCellEditTextFieldProps'] => {
+      cell: MRT_Cell<Product>,
+    ): MRT_ColumnDef<Product>['muiTableBodyCellEditTextFieldProps'] => {
       return {
         error: !!validationErrors[cell.id],
         helperText: validationErrors[cell.id],
@@ -98,13 +101,18 @@ export const NewProduct = ({open,setOpen}: IActionsModal) => {
     [validationErrors],
   );
 
-	const handleCreateNewRow = (values: any) => {
-		console.log(values)
-    tableData.push(values);
-    setTableData([...tableData]);
+	const handleCreateNewRow = async (values: any) => {
+    try{
+      const productsResponse: Product[] = await (await apiService.setProduct(values)).json()
+      if(productsResponse){
+        setTableData([...tableData, values]);
+      }
+    }catch(e){
+      console.log('Error al guardar el producto =>', {e})
+    }
   };
 
-	const columns = useMemo<MRT_ColumnDef<any>[]>(
+  const columns = useMemo<MRT_ColumnDef<Product>[]>(
     () => [
       {
         accessorKey: 'name',
@@ -123,8 +131,8 @@ export const NewProduct = ({open,setOpen}: IActionsModal) => {
 					variant:"outlined",
           select: true, //change to select for a dropdown
           children: brands.map((brand) => (
-            <MenuItem key={brand} value={brand}>
-              {brand}
+            <MenuItem key={brand._id} value={brand.name}>
+              {brand.name}
             </MenuItem>
           )),
         },
@@ -172,8 +180,8 @@ export const NewProduct = ({open,setOpen}: IActionsModal) => {
 					variant:"outlined",
           select: true, //change to select for a dropdown
           children: categories.map((category) => (
-            <MenuItem key={category} value={category}>
-              {category}
+            <MenuItem key={category._id} value={category.name}>
+              {category.name}
             </MenuItem>
           )),
         },
@@ -217,10 +225,72 @@ export const NewProduct = ({open,setOpen}: IActionsModal) => {
 						})}
 					</Box>
 				),
-      }
+      },
+      {
+        accessorKey: 'bar_code',
+        header: 'Código',
+        size: 140,
+        muiTableBodyCellEditTextFieldProps: ({ cell }) => ({
+					variant:"outlined",
+          ...getCommonEditTextFieldProps(cell),
+        }),
+      },
     ],
     [getCommonEditTextFieldProps],
   );
+
+  const parseBrand = (brandCode: string) => {
+    return brands.find(brand => brand._id == brandCode)
+  }
+
+  const parseCategory = (categoryCode: string) => {
+    return categories.find(category => category._id == categoryCode)
+  }
+
+  const fetchListProducts = async () => {
+    try{
+      const products: Product[] = await (await apiService.getAllProducts()).json()
+
+      const productsParsed = products.map((element: Product) => {
+        return {
+          ...element,
+          brand: parseBrand(element.brand).name,
+          category: parseCategory(element.category).name
+        }
+      })
+      
+      setTableData(productsParsed)
+    }catch(e){
+      console.log('Error al obtener la lista de productos =>', {e})
+    }
+  }
+
+  const getAllBrands = async () => {
+    try{
+      const brands = await (await apiService.getAllBrands()).json()
+      setAllBrands(brands)
+    }catch(e){
+      console.log('Error al obtener las marcas =>', {e})
+    }
+  }
+
+  const getAllCategories = async () => {
+    try{
+      const categoriesList = await (await apiService.getAllBussinesCategory()).json()
+      setAllCategories(categoriesList)
+    }catch(e){
+      console.log('Error al obtener las marcas =>', {e})
+    }
+  }
+
+  useEffect(() => {
+    getAllBrands()
+    getAllCategories()
+  },[])
+
+  useEffect(()=>{
+    if(brands.length && categories.length) fetchListProducts()
+  },[brands,categories])
 
   return (
     <Dialog 
@@ -229,7 +299,7 @@ export const NewProduct = ({open,setOpen}: IActionsModal) => {
       fullWidth={fullWidth}
       maxWidth={maxWidth}
     >
-      <DialogTitle>Inventario</DialogTitle>
+      <DialogTitle>Lista inventario</DialogTitle>
       <DialogContent>
         <MaterialReactTable
 					positionActionsColumn="last"
@@ -282,8 +352,8 @@ export const NewProduct = ({open,setOpen}: IActionsModal) => {
 							onClick={() => setCreateModalOpen(true)}
 							variant="contained"
 						>
-							<Box sx={{ display: 'flex', gap: '1rem' }}>
-								<AddCircle color="secondary"/>  Crear producto
+							<Box sx={{ display: 'flex', flexDirection: 'row', alignItems:'left',justifyContent:'left' ,gap: '0.5rem' }}>
+								<AddCircle color="secondary"/>Nuevo
 							</Box>
 						</Button>
           )}
