@@ -27,11 +27,27 @@ function App() {
 
   return (
     <ThemeProvider theme={theme}>
-      <NewBrand open={openNewBrandModal} setOpen={()=> setOpenNewBrandModal(prev => !prev)} />
-      <NewInventary open={openNewInventaryModal} setOpen={()=> setOpenNewInventaryModal(prev => !prev)} />
-      <NewSale open={openNewSaleModal} setOpen={()=> setOpenNewSaleModal(prev => !prev)} />
-      <NewProduct open={openNewProductModal} setOpen={()=> setOpenNewProductModal(prev => !prev)} />
-      
+
+      {
+        openNewProductModal ?
+          <NewProduct open={openNewProductModal} setOpen={()=> setOpenNewProductModal(prev => !prev)} /> :
+        <></>
+      }
+      {
+        openNewSaleModal ?
+          <NewSale open={openNewSaleModal} setOpen={()=> setOpenNewSaleModal(prev => !prev)} /> :
+        <></>
+      }
+      {
+        openNewBrandModal ?
+          <NewBrand open={openNewBrandModal} setOpen={()=> setOpenNewBrandModal(prev => !prev)} /> :
+        <></>
+      }
+      {
+        openNewInventaryModal ?
+          <NewInventary open={openNewInventaryModal} setOpen={()=> setOpenNewInventaryModal(prev => !prev)} /> :
+        <></>
+      }
       <MiniDrawer 
         showProduct={()=>setOpenNewProductModal(prev => !prev)}
         showSale={()=>setOpenNewSaleModal(prev => !prev)}

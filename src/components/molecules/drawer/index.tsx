@@ -102,7 +102,7 @@ export const MiniDrawer = ({
   showAddCategory
 }: any) => {
   const theme = useTheme();
-  const [open, setOpen] = React.useState(false);
+  const [open, setOpen] = React.useState(true);
 
   const handleDrawerOpen = () => {
     setOpen(true);
@@ -220,8 +220,13 @@ export const MiniDrawer = ({
           ))}
         </List>
       </Drawer>
-      <Box component="main" sx={{ flexGrow: 1, p: -3 }}>
-        <img src="bg_home.jpg" alt="" />
+      <Box component="main" sx={{ flexGrow: 1, p: -3, width:"100%" }}>
+        <img src="bg_home.jpg" alt="" style={{
+              width: "100%",
+              marginTop: "64px",
+              maxWidth: "100%",
+              height: "auto"
+        }} />
       </Box>
     </Box>
   );

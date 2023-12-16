@@ -33,20 +33,33 @@ import Dialog from '@mui/material/Dialog';
 import CloseIcon from '@mui/icons-material/Close';
 
 export const NewSale = ({open,setOpen}:IActionsModal) => {
+    const [pasted, setPasted] = React.useState();
     const [openAutocomplete, setOpenAutocomplete] = React.useState(false);
     const [options, setOptions] = React.useState<readonly Product[] >([]);
     const [listSelectedProducts, setListSelectedProducts] = React.useState([]);
 
     function sleep(delay = 0) {
         return new Promise((resolve) => {
-          setTimeout(resolve, delay);
+            setTimeout(resolve, delay);
         });
-      }
+    }
+
     const loading = open && options.length === 0;
     interface Product {
-      name: string;
-      price: number;
+        name: string;
+        price: number;
     }
+
+    React.useEffect(() => {
+        const handlePaste = (event:any) => {
+            console.log('CODIGO=>', event.clipboardData.getData('text'))
+            setPasted(event.clipboardData.getData('text'));
+        }
+        window.addEventListener('paste', handlePaste)
+        return () => {
+          window.removeEventListener('paste', handlePaste)
+        };
+    })
 
     React.useEffect(() => {
         let active = true;
