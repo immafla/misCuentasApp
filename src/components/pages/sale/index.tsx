@@ -54,6 +54,14 @@ export const NewSale = ({open,setOpen}:IActionsModal) => {
         const handlePaste = (event:any) => {
             console.log('CODIGO=>', event.clipboardData.getData('text'))
             setPasted(event.clipboardData.getData('text'));
+            
+            setListSelectedProducts(prevState => {
+                prevState.push({
+                    name: event.clipboardData.getData('text'),
+                    price: '$5000'
+                })
+                return prevState
+            })
         }
         window.addEventListener('paste', handlePaste)
         return () => {
