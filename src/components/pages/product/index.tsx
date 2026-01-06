@@ -1,5 +1,6 @@
 import React, { FC, useState, useMemo, useCallback, useEffect } from 'react'
 import { validateRequired, validateEmail, validateAge } from '../../../utils'
+import Chip from '@mui/material/Chip';
 import { ApiService } from '../../../services/api.service'
 import {
     Button,
@@ -17,6 +18,7 @@ import {
     InputLabel,
     Select
 } from '@mui/material'
+import AddCircleIcon from '@mui/icons-material/AddCircle';
 import CloseIcon from '@mui/icons-material/Close';
 import MaterialReactTable, {
     MaterialReactTableProps,
@@ -51,6 +53,10 @@ export const NewProduct = ({open,setOpen}: IActionsModal) => {
           exitEditingMode();
       }
   };
+
+  const addItemsToInventary = (data:any) => {
+    console.log(data)
+  }
 
   const handleCancelRowEdits = () => {
       setValidationErrors({});
@@ -153,31 +159,17 @@ export const NewProduct = ({open,setOpen}: IActionsModal) => {
 					variant:"outlined",
           ...getCommonEditTextFieldProps(cell),
         }),
-				Cell: ({ cell }) => (
-					<Box
-						sx={(theme) => ({
-							backgroundColor:
-								cell.getValue<number>() < 10
-									? theme.palette.error.dark
-									: cell.getValue<number>() >= 10 &&
-										cell.getValue<number>() < 20
-									? theme.palette.warning.dark
-									: theme.palette.success.dark,
-							borderRadius: '0.25rem',
-							color: '#fff',
-							maxWidth: '9ch',
-							p: '0.25rem',
-						})}
-					>
-						{cell.getValue<number>()}
-						{/* {cell.getValue<number>()?.toLocaleString?.('en-US', {
-							style: 'currency',
-							currency: 'USD',
-							minimumFractionDigits: 0,
-							maximumFractionDigits: 0,
-						})} */}
-					</Box>
-				),
+				Cell: ({ cell }) => {
+          const value = cell.getValue<number>()
+          return (
+          <Chip 
+            icon={<AddCircleIcon />} 
+            sx={{'minWidth': '4rem', 'cursor': 'pointer'}}
+            color={ value < 10 ? 'error' : value >= 10 && value < 20 ? 'warning': "success" } 
+            label={value} 
+            onClick={ () => addItemsToInventary(cell.row.original)}
+          />
+				)},
       },
 			{
         accessorKey: 'category',
