@@ -1,10 +1,11 @@
-import React from 'react'
+import React, { useState, useEffect, Fragment} from 'react'
 import dayjs, { Dayjs } from 'dayjs';
 import {
     Button,
     InputLabel,
     MenuItem,
     AppBar,
+    DialogActions,
     FormControl,
     Toolbar,
     IconButton,
@@ -26,14 +27,16 @@ import { IActionsModal } from './interface'
 
 import Dialog from '@mui/material/Dialog';
 import CloseIcon from '@mui/icons-material/Close';
+import { Product } from '../../../interfaces';
+import { ApiService } from '../../../services/api.service'
 
 export const NewInventary = ({open,setOpen}:IActionsModal):JSX.Element => {
 
-    const [age, setAge] = React.useState('');
-    const [openAutocomplete, setOpenAutocomplete] = React.useState(false);
-    const [options, setOptions] = React.useState<readonly Film[]>([]);
-
-    const [value, setValue] = React.useState<Dayjs | null>(
+    const apiService = new ApiService
+    const [age, setAge] = useState('');
+    const [openAutocomplete, setOpenAutocomplete] = useState(false);
+    const [options, setOptions] = useState<Product[]>([]);
+    const [value, setValue] = useState<Dayjs | null>(
         dayjs('2014-08-18T21:11:54'),
     );
 
@@ -48,7 +51,8 @@ export const NewInventary = ({open,setOpen}:IActionsModal):JSX.Element => {
 
     const handleChangeDate = (newValue: Dayjs | null) => {
         setValue(newValue);
-      };
+    };
+
     const loading = open && options.length === 0;
 
     interface Film {
@@ -56,26 +60,44 @@ export const NewInventary = ({open,setOpen}:IActionsModal):JSX.Element => {
       year: number;
     }
 
-    React.useEffect(() => {
-      let active = true;
+    const getAllProducts = async () => {
+        try{
+            const products: Product[] = await (await apiService.getAllProducts()).json()
+            return products
+            // const productsParsed = products.map((element: Product) => {
+            //     return {
+            //         ...element,
+            //         brand: parseBrand(element.brand).name,
+            //         category: parseCategory(element.category).name
+            //     }
+            //     })
+                
+            //     setTableData(productsParsed)
+            }catch(e){
+                console.log('Error al obtener la lista de productos =>', {e})
+            }
 
-      if (!loading) {
-        return undefined;
-      }
+    }
 
-      (async () => {
-        await sleep(1e3); // For demo purposes.
-
-        if (active) {
-          setOptions([...topFilms]);
+    useEffect(() => {
+        let active = true;
+        if (!loading) {
+            return undefined;
         }
-      })();
-      return () => {
-        active = false;
-      };
+        (async () => {
+            await sleep(1e3); // For demo purposes.
+            if (active) {
+                const products = await getAllProducts()
+                setOptions(products);
+            }
+        })();
+
+        return () => {
+            active = false;
+        };
     }, [loading]);
 
-    React.useEffect(() => {
+    useEffect(() => {
         if (!open) {
           setOptions([]);
         }
@@ -85,7 +107,8 @@ export const NewInventary = ({open,setOpen}:IActionsModal):JSX.Element => {
         <Dialog
             open={open} 
             onClose={() => setOpen()}
-            fullScreen
+            fullWidth={true}
+            maxWidth={'sm'}
             >
             <AppBar sx={{ position: 'relative' }}>
                 <Toolbar>
@@ -126,21 +149,6 @@ export const NewInventary = ({open,setOpen}:IActionsModal):JSX.Element => {
                         </FormControl>
                     </Grid>
 
-                    {/* FECHA DE COMPRA */}
-                    <Grid item xs={6}>
-                        <FormControl fullWidth>
-                            <LocalizationProvider dateAdapter={AdapterDayjs}>
-                                <MobileDatePicker
-                                    label="Fecha de compra"
-                                    inputFormat="DD/MM/YYYY"
-                                    value={value}
-                                    onChange={handleChangeDate}
-                                    renderInput={(params) => <TextField {...params} />}
-                                />
-                            </LocalizationProvider>
-                        </FormControl>
-                    </Grid>
-
                     {/* PRODUCTO */}
                     <Grid item xs={6}>
                         <FormControl fullWidth>
@@ -154,8 +162,8 @@ export const NewInventary = ({open,setOpen}:IActionsModal):JSX.Element => {
                             onClose={() => {
                                 setOpenAutocomplete(false);
                             }}
-                            isOptionEqualToValue={(option, value) => option.title === value.title}
-                            getOptionLabel={(option) => option.title}
+                            isOptionEqualToValue={(option, value) => option.name === value.name}
+                            getOptionLabel={(option) => option.name}
                             options={options}
                             loading={loading}
                             renderInput={(params) => (
@@ -165,51 +173,15 @@ export const NewInventary = ({open,setOpen}:IActionsModal):JSX.Element => {
                                     InputProps={{
                                         ...params.InputProps,
                                         endAdornment: (
-                                        <React.Fragment>
+                                        <Fragment>
                                             {loading ? <CircularProgress color="inherit" size={20} /> : null}
                                             {params.InputProps.endAdornment}
-                                        </React.Fragment>
+                                        </Fragment>
                                         ),
                                     }}
                                 />
                             )}
                         />
-                        </FormControl>
-                    </Grid>
-
-                    {/* PROVEEDOR */}
-                    <Grid item xs={6}>
-                        <FormControl fullWidth>
-                            <Autocomplete
-                                id="asynchronous-demo"
-                                //sx={{ width: 300 }}
-                                open={openAutocomplete}
-                                onOpen={() => {
-                                    setOpenAutocomplete(true);
-                                }}
-                                onClose={() => {
-                                    setOpenAutocomplete(false);
-                                }}
-                                isOptionEqualToValue={(option, value) => option.title === value.title}
-                                getOptionLabel={(option) => option.title}
-                                options={options}
-                                loading={loading}
-                                renderInput={(params) => (
-                                    <TextField
-                                        {...params}
-                                        label="Proveedor"
-                                        InputProps={{
-                                            ...params.InputProps,
-                                            endAdornment: (
-                                            <React.Fragment>
-                                                {loading ? <CircularProgress color="inherit" size={20} /> : null}
-                                                {params.InputProps.endAdornment}
-                                            </React.Fragment>
-                                            ),
-                                        }}
-                                    />
-                                )}
-                            />
                         </FormControl>
                     </Grid>
 
@@ -242,58 +214,9 @@ export const NewInventary = ({open,setOpen}:IActionsModal):JSX.Element => {
                     </Grid>
                 </Grid>
             </Container>
+            <DialogActions>
+                <Button variant="contained" onClick={() => setOpen()}>Cerrar</Button>
+            </DialogActions>
         </Dialog>
     )
 }
-
-
-
-const topFilms = [
-    { title: 'The Shawshank Redemption', year: 1994 },
-    { title: 'The Godfather', year: 1972 },
-    { title: 'The Godfather: Part II', year: 1974 },
-    { title: 'The Dark Knight', year: 2008 },
-    { title: '12 Angry Men', year: 1957 },
-    { title: "Schindler's List", year: 1993 },
-    { title: 'Pulp Fiction', year: 1994 },
-    {
-      title: 'The Lord of the Rings: The Return of the King',
-      year: 2003,
-    },
-    { title: 'The Good, the Bad and the Ugly', year: 1966 },
-    { title: 'Fight Club', year: 1999 },
-    {
-      title: 'The Lord of the Rings: The Fellowship of the Ring',
-      year: 2001,
-    },
-    {
-      title: 'Star Wars: Episode V - The Empire Strikes Back',
-      year: 1980,
-    },
-    { title: 'Forrest Gump', year: 1994 },
-    { title: 'Inception', year: 2010 },
-    {
-      title: 'The Lord of the Rings: The Two Towers',
-      year: 2002,
-    },
-    { title: "One Flew Over the Cuckoo's Nest", year: 1975 },
-    { title: 'Goodfellas', year: 1990 },
-    { title: 'The Matrix', year: 1999 },
-    { title: 'Seven Samurai', year: 1954 },
-    {
-      title: 'Star Wars: Episode IV - A New Hope',
-      year: 1977,
-    },
-    { title: 'City of God', year: 2002 },
-    { title: 'Se7en', year: 1995 },
-    { title: 'The Silence of the Lambs', year: 1991 },
-    { title: "It's a Wonderful Life", year: 1946 },
-    { title: 'Life Is Beautiful', year: 1997 },
-    { title: 'The Usual Suspects', year: 1995 },
-    { title: 'Léon: The Professional', year: 1994 },
-    { title: 'Spirited Away', year: 2001 },
-    { title: 'Saving Private Ryan', year: 1998 },
-    { title: 'Once Upon a Time in the West', year: 1968 },
-    { title: 'American History X', year: 1998 },
-    { title: 'Interstellar', year: 2014 },
-  ];

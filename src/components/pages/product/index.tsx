@@ -3,7 +3,7 @@ import { validateRequired, validateEmail, validateAge } from '../../../utils'
 import { ApiService } from '../../../services/api.service'
 import {
     Button,
-    TextField,
+    Typography,
     DialogActions,
     DialogContent,
     DialogTitle, 
@@ -11,11 +11,13 @@ import {
     Tooltip,
     IconButton,
     MenuItem,
-		Stack,
+		AppBar,
+    Toolbar,
     FormControl,
     InputLabel,
     Select
 } from '@mui/material'
+import CloseIcon from '@mui/icons-material/Close';
 import MaterialReactTable, {
     MaterialReactTableProps,
     MRT_Cell,
@@ -301,10 +303,30 @@ export const NewProduct = ({open,setOpen}: IActionsModal) => {
     <Dialog 
       open={open} 
       onClose={() => setOpen()}
-      fullWidth={fullWidth}
-      maxWidth={maxWidth}
+      //fullWidth={fullWidth}
+      //maxWidth={maxWidth}
+      fullWidth={true}
+      maxWidth={'md'}
     >
-      <DialogTitle>Lista inventario</DialogTitle>
+      <AppBar sx={{ position: 'relative' }}>
+        <Toolbar>
+            <IconButton
+                edge="start"
+                color="inherit"
+                onClick={setOpen}
+                aria-label="close"
+            >
+                <CloseIcon />
+            </IconButton>
+            <Typography sx={{ ml: 2, flex: 1 }} variant="h6" component="div">
+                Ingresar inventario
+            </Typography>
+            <Button autoFocus color="inherit" onClick={setOpen}>
+                Guardar
+            </Button>
+        </Toolbar>
+      </AppBar>
+
       <DialogContent>
         <MaterialReactTable
 					positionActionsColumn="last"
